@@ -1,70 +1,72 @@
 <script>
-	// Aucun script nécessaire pour cette page
+    // Aucun script nécessaire pour cette page
 </script>
 
 <style>
-	/* Style global rétro */
-	:global(html, body) {
-		margin: 0;
-		padding: 0;
-		height: 100%;
-		background: #000;
-		font-family: 'Press Start 2P', monospace;
-		color: #0ff;
-	}
+    :global(html, body) {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Press Start 2P', monospace;
+        overflow: hidden;
+        background: #000;
+    }
 
-	.container {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		height: 100vh;
-		text-align: center;
-		padding: 1rem;
-	}
+    /* Fond avec ton image locale */
+    .main-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/retro-gaming.jpg') center/cover no-repeat;
+        background-color: red; /* pour test */
+	z-index: -1;
+    }
 
-	h1 {
-		font-size: 2rem;
-		margin-bottom: 3rem;
-		text-shadow: 0 0 10px #0ff;
-	}
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 100vh;
+        position: relative;
+    }
 
-	.start-btn {
-		font-size: 1.5rem;
-		padding: 1.2rem 2.5rem;
-		background: #111;
-		color: #0ff;
-		border: 4px solid #0ff;
-		text-decoration: none;
-		border-radius: 8px;
-		text-transform: uppercase;
-		transition: 0.15s ease-in-out;
-		cursor: pointer;
-	}
+    /* Bouton Start placé sur l'écran de la console */
+    .start-btn {
+        position: absolute;
+        top: 38%;       /* Ajustable selon ton image pour centrer le bouton sur l'écran */
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 1.5rem;
+        padding: 1rem 2rem;
+        background: #111;
+        color: #0ff;
+        border: 4px solid #0ff;
+        border-radius: 8px;
+        cursor: pointer;
+        text-transform: uppercase;
+        text-decoration: none;
+        text-align: center;
+        transition: 0.15s ease-in-out;
+    }
 
-	.start-btn:hover {
-		transform: scale(1.08);
-		box-shadow: 0 0 15px #0ff;
-	}
+    .start-btn:hover {
+        transform: translateX(-50%) scale(1.08);
+        box-shadow: 0 0 15px #0ff;
+    }
 
-	/* Responsive */
-	@media (max-width: 600px) {
-		h1 {
-			font-size: 1.5rem;
-		}
-
-		.start-btn {
-			font-size: 1.2rem;
-			padding: 1rem 2rem;
-		}
-	}
+    @media (max-width: 600px) {
+        .start-btn {
+            font-size: 1.2rem;
+            padding: 0.8rem 1.5rem;
+        }
+    }
 </style>
 
-<div class="container">
-	<h1>Bienvenue</h1>
+<div class="main-bg"></div>
 
-	<a href="/form" class="start-btn">
-		Start
-	</a>
+<div class="container">
+    <a href="/form" class="start-btn">Start</a>
 </div>
 

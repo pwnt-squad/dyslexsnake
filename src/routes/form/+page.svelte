@@ -3,6 +3,10 @@
 	let nom = '';
 	let prenom = '';
 
+	// Messages
+	let erreur = '';      // pour le formulaire
+	let diceError = '';   // pour le mini-jeu de date / dé
+
 	// Téléphone roulette séquentielle
 	let digits = Array(10).fill(null);
 	digits[0] = 0; 
@@ -15,7 +19,6 @@
 	let diceValue = null; // chiffre final du dé
 	let diceStep = 0; // position dans la date (0-7)
 	let diceRolling = false;
-	let erreur = '';
 	let diceFace = 0; // chiffre affiché sur le cube pendant animation
 	let diceAnim = false;
 
@@ -38,13 +41,22 @@
 
 	function stopPhone() {
 		if (intervalIdPhone) clearInterval(intervalIdPhone);
-		digits[currentIndex] = currentDigit;
-		currentIndex++;
-		if (currentIndex < digits.length) startPhone();
+
+		if (currentIndex < digits.length) {
+			digits[currentIndex] = currentDigit;
+			currentIndex++;
+		}
+
+		if (currentIndex < digits.length) {
+			startPhone();
+		}
 	}
 
 	// --- Dé 3D ---
 	function rollDice3D() {
+		// Dès qu'on clique, on efface le message Game Over
+		diceError = '';
+
 		if (diceStep >= 8) return;
 		diceRolling = true;
 		diceAnim = true;
@@ -61,17 +73,42 @@
 	}
 
 	function validateDice() {
-		if (diceValue === null) return;
+		if (diceValue === null || diceError) return;
 		const positions = [0,1,3,4,6,7,8,9];
 		let arr = dateField.split('');
 		arr[positions[diceStep]] = diceValue;
 		dateField = arr.join('');
 		diceStep++;
 		diceValue = null;
+
+		checkDateProgressive(); // contrôle progressif
 	}
 
-	function relaunchDice() {
-		rollDice3D();
+	// --- Contrôle progressif de la date ---
+	function checkDateProgressive() {
+		const today = new Date();
+		const currentYear = today.getFullYear().toString(); // ex: '2025'
+		const arr = dateField.split('');
+
+		// Vérifier jour
+		if (arr[0] !== ' ' && Number(arr[0]) > 3) return gameOver();
+		if (arr[1] !== ' ' && arr[0] === '3' && Number(arr[1]) > 1) return gameOver();
+
+		// Vérifier mois
+		if (arr[3] !== ' ' && Number(arr[3]) > 1) return gameOver();
+		if (arr[4] !== ' ' && arr[3] === '1' && Number(arr[4]) > 2) return gameOver();
+
+		// Vérifier année
+		for (let i = 6; i <= 9; i++) {
+			if (arr[i] !== ' ' && Number(arr[i]) > Number(currentYear[i-6])) {
+				return gameOver();
+			}
+		}
+	}
+
+	function gameOver() {
+		resetDate();
+		diceError = 'GAME\nOVER\n!'; // multi-lignes
 	}
 
 	// --- Reset complet ---
@@ -81,6 +118,7 @@
 		resetPhone();
 		resetDate();
 		erreur = '';
+		diceError = '';
 	}
 
 	function resetDate() {
@@ -95,6 +133,7 @@
 	// --- Soumission formulaire ---
 	function handleSubmit() {
 		erreur = '';
+		diceError = '';
 		const regexNomPrenom = /^[^0-9]+$/;
 
 		if (!nom || !prenom || digits.includes(null) || dateField.includes(' ')) {
@@ -147,7 +186,6 @@
 		position: relative;
 	}
 
-	/* Masquer scrollbar */
 	.wrapper::-webkit-scrollbar { display: none; }
 	.wrapper { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -199,13 +237,19 @@
 		width: 80px;
 		height: 80px;
 		background: #000;
-		color: #00ff00;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		font-size: 2rem;
+		font-size: 1.2rem;
+		text-align: center;
 		border: 2px solid #00ff00;
+		padding: 0.2rem;
+		box-sizing: border-box;
+		word-break: break-word;
+		white-space: pre-line; /* pour afficher les sauts de ligne */
+		color: #00ff00;
 	}
+	.face-error { color: #ff3d00; } /* couleur rouge pour Game Over */
 	.face1 { transform: rotateY(0deg) translateZ(40px); }
 	.face2 { transform: rotateY(90deg) translateZ(40px); }
 	.face3 { transform: rotateY(180deg) translateZ(40px); }
@@ -213,11 +257,10 @@
 	.face5 { transform: rotateX(90deg) translateZ(40px); }
 	.face6 { transform: rotateX(-90deg) translateZ(40px); }
 
-	/* Div hors écran */
 	.hidden-div {
 		position: absolute;
-		top: 2rem;           /* même niveau que le formulaire */
-		left: calc(100% + 50px); /* complètement hors écran */
+		top: 2rem;
+		left: calc(100% + 50px);
 		width: 250px;
 		height: 250px;
 		background: #222;
@@ -246,20 +289,19 @@
 		<div class="dice-container">
 			<div class="dice-box">
 				<div class="dice-cube" style="transform: rotateX({diceAnim ? Math.random()*720 : 0}deg) rotateY({diceAnim ? Math.random()*720 : 0}deg);">
-					<div class="face face1">{diceFace}</div>
-					<div class="face face2">{(diceFace+1)%10}</div>
-					<div class="face face3">{(diceFace+2)%10}</div>
-					<div class="face face4">{(diceFace+3)%10}</div>
-					<div class="face face5">{(diceFace+4)%10}</div>
-					<div class="face face6">{(diceFace+5)%10}</div>
+					<div class="face face1" class:face-error={diceError}>{diceError || diceFace}</div>
+					<div class="face face2" class:face-error={diceError}>{diceError || (diceFace+1)%10}</div>
+					<div class="face face3" class:face-error={diceError}>{diceError || (diceFace+2)%10}</div>
+					<div class="face face4" class:face-error={diceError}>{diceError || (diceFace+3)%10}</div>
+					<div class="face face5" class:face-error={diceError}>{diceError || (diceFace+4)%10}</div>
+					<div class="face face6" class:face-error={diceError}>{diceError || (diceFace+5)%10}</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="dice-buttons">
 			<button type="button" on:click={rollDice3D} disabled={diceStep >= 8}>Lancer Dé</button>
-			<button type="button" on:click={validateDice} disabled={diceValue === null}>Valider</button>
-			<button type="button" on:click={relaunchDice} disabled={diceStep >= 8}>Relancer Dé</button>
+			<button type="button" on:click={validateDice} disabled={diceValue === null || diceError}>Valider</button>
 		</div>
 
 		<label>Téléphone</label>
