@@ -1,6 +1,8 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
 
+	let { textOutput = $bindable() } = $props();
+
 	/**
 	 *
 	 * @param {number} min
@@ -35,9 +37,11 @@
 	let window_inner_width = $state(0);
 	let window_inner_height = $state(0);
 
-	let canvas_width = $derived(Math.ceil(window_inner_width / 2 / snake_head_size) * snake_head_size);
-	let canvas_height = $derived(Math.ceil(window_inner_height / 2 / snake_head_size) * snake_head_size);
+	// let canvas_width = $derived(Math.ceil(window_inner_width / 2 / snake_head_size) * snake_head_size);
+	// let canvas_height = $derived(Math.ceil(window_inner_height / 2 / snake_head_size) * snake_head_size);
 
+	let canvas_width = $state(500);
+	let canvas_height = $state(500);
 	let max_x = $derived(canvas_width / snake_head_size);
 	let max_y = $derived(canvas_height / snake_head_size);
 
@@ -56,7 +60,7 @@
 	/** @type {SnakeFruit}*/
 	let check_fruit = $state();
 
-	let current_word = $state("");
+	let current_word = $state('');
 
 
 	/**
@@ -79,22 +83,25 @@
 	$effect(() => {
 		const ctx = canvas.getContext('2d');
 		ctx.clearRect(0, 0, canvas_width, canvas_height);
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0, 0, canvas_width, canvas_height);
+
 
 		// render fruits
 		for (let fruit of letter_fruits) {
 			ctx.fillStyle = 'lightblue';
 			ctx.beginPath();
-			ctx.arc(fruit.x * snake_head_size+ snake_head_size/2, fruit.y * snake_head_size+ snake_head_size/2, fruit_radius, 0, 2*Math.PI);
+			ctx.arc(fruit.x * snake_head_size + snake_head_size / 2, fruit.y * snake_head_size + snake_head_size / 2, fruit_radius, 0, 2 * Math.PI);
 			ctx.fill();
 			ctx.font = '12px monospace';
 			ctx.fillStyle = 'black';
-			ctx.fillText(fruit.letter.toUpperCase(), fruit.x * snake_head_size+fruit_radius, fruit.y * snake_head_size + 2*(fruit_radius));
+			ctx.fillText(fruit.letter.toUpperCase(), fruit.x * snake_head_size + fruit_radius, fruit.y * snake_head_size + 2 * (fruit_radius));
 		}
 
 		if (check_fruit) {
 			ctx.font = '12px monospace';
 			ctx.fillStyle = 'black';
-			ctx.fillText(check_fruit.letter.toUpperCase(), check_fruit.x * snake_head_size+2, check_fruit.y * snake_head_size + 2 * (fruit_radius));
+			ctx.fillText(check_fruit.letter.toUpperCase(), check_fruit.x * snake_head_size + 2, check_fruit.y * snake_head_size + 2 * (fruit_radius));
 		}
 		// render snake
 		ctx.fillStyle = 'red';
@@ -115,7 +122,7 @@
 		}
 	});
 
-	const letters = ['a', "b" ,"c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+	const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 
 	function generate_fruits() {
 		letter_fruits = [];
@@ -156,7 +163,7 @@
 				check_fruit = {
 					x: x,
 					y: y,
-					letter: "✅"
+					letter: '✅'
 				};
 				break;
 			}
@@ -223,7 +230,7 @@
 		if (head.x < 0 || head.x >= max_x || head.y < 0 || head.y >= max_y) {
 			running = false;
 			dead = true;
-			current_word = "";
+			current_word = '';
 			window.clearInterval(interval);
 		}
 		// check snake head not on body
@@ -232,7 +239,7 @@
 			if (part.x === head.x && part.y === head.y) {
 				running = false;
 				dead = true;
-				current_word = "";
+				current_word = '';
 				window.clearInterval(interval);
 			}
 		}
@@ -251,6 +258,7 @@
 			// todo: validate the form
 			running = false;
 			won = true;
+			textOutput = current_word;
 			window.clearInterval(interval);
 		}
 	}
@@ -269,7 +277,7 @@
 		dead = false;
 		running = true;
 		won = false;
-		current_word = "";
+		current_word = '';
 		current_direction = Direction.Right;
 		generate_fruits();
 	}
@@ -345,20 +353,20 @@
 	// })
 </script>
 
-<svelte:window bind:innerWidth={window_inner_width} bind:innerHeight={window_inner_height} onkeydown={handle_keydown} />
+<svelte:window bind:innerWidth={window_inner_width} bind:innerHeight={window_inner_height} />
 
 <style>
     h1 {
         font-size: large;
-				text-align: center;
+        text-align: center;
     }
 
-    canvas {
-        border: 1px solid black;
-        margin: 3em auto auto;
-    }
+    /*canvas {*/
+    /*    border: 1px solid black;*/
+    /*    margin: 3em auto auto;*/
+    /*}*/
 </style>
 
-<canvas bind:this={canvas} width={canvas_width} height={canvas_height}></canvas>
-
+<canvas tabindex="0" bind:this={canvas} width=500 height=500 onkeydown={handle_keydown}></canvas>
+<br>
 <h1>Current word: {current_word}</h1>

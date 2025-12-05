@@ -1,7 +1,8 @@
 <script>
 	import { goto } from '$app/navigation';
+	import Snake from '$lib/Snake.svelte';
 	let nom = '';
-	let prenom = '';
+	let prenom = $state('');
 
 	// Messages
 	let erreur = '';      // pour le formulaire
@@ -9,9 +10,9 @@
 
 	// Téléphone roulette séquentielle
 	let digits = Array(10).fill(null);
-	digits[0] = 0; 
-	let currentDigit = 0; 
-	let currentIndex = 1; 
+	digits[0] = 0;
+	let currentDigit = 0;
+	let currentIndex = 1;
 	let intervalIdPhone = null;
 
 	// Date via mini-jeu de dés
@@ -119,6 +120,7 @@
 		resetDate();
 		erreur = '';
 		diceError = '';
+		window.location.reload();
 	}
 
 	function resetDate() {
@@ -167,6 +169,9 @@
 
 		goto('/fin');
 	}
+	$effect(() => {
+		$inspect(prenom);
+	});
 </script>
 
 <style>
@@ -184,6 +189,7 @@
 		overflow-y: hidden;
 		scroll-behavior: smooth;
 		position: relative;
+		background: #000;
 	}
 
 	.wrapper::-webkit-scrollbar { display: none; }
@@ -261,15 +267,14 @@
 		position: absolute;
 		top: 2rem;
 		left: calc(100% + 50px);
-		width: 250px;
-		height: 250px;
+		width: 500px;
+		height: 500px;
 		background: #222;
 		border: 2px solid #00ff00;
-		display: flex;
-		justify-content: center;
-		align-items: center;
 		color: #00ff00;
 		font-family: 'Press Start 2P', cursive;
+		box-sizing: content-box;
+		margin-right: 1em;
 	}
 </style>
 
@@ -280,8 +285,8 @@
 		<label>Nom</label>
 		<input type="text" bind:value={nom} />
 
-		<label>Prénom</label>
-		<input type="text" bind:value={prenom} />
+		<label>Prénom -></label>
+		<input type="text" bind:value={prenom} disabled />
 
 		<label>Date de naissance (jj/mm/aaaa)</label>
 		<input class="date-field" type="text" bind:value={dateField} readonly />
@@ -322,7 +327,7 @@
 	</form>
 
 	<div class="hidden-div">
-		Div hors écran
+		<Snake bind:textOutput={prenom}></Snake>
 	</div>
 </div>
 

@@ -1,5 +1,5 @@
 <script>
-	import Snake from './Snake.svelte';
+	import Snake from '$lib/Snake.svelte';
 </script>
 
 <Snake></Snake>
