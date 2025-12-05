@@ -52,7 +52,7 @@
         radius: 10,
         vx: 3,
         vy: 2.5,
-        color: 'red'
+        color: '#FFFFFF'
     };
     
     // --- CONSTANTES DE LIGNES DE BUT MODIFIÉES ---
@@ -63,12 +63,12 @@
     // ---------------------------------------------
     
     // Variables pour le dessin des barres (nécessaires pour le calcul de collision)
-    const barCount = 10;
+    const barCount = 12;
     let barHeightSpace = 0;
     let gap = 0;
     
     // Facteur d'amplitude (sensibilité)
-    const AMPLITUDE_FACTOR = 0.5; 
+    const AMPLITUDE_FACTOR = 1; 
     
     // Facteur de réduction de la longueur physique maximale
     const REDUCTION_FACTOR = 0.5; 
@@ -188,7 +188,7 @@
             if (side === 'left') isInitializedLeft = false;
             if (side === 'right') isInitializedRight = false;
 
-            initAudio(side);
+            initAudio(side); 
         }
     }
 
@@ -207,11 +207,19 @@
         // Réinitialiser le score au début d'un nouveau jeu
         scoreLeft = 0; 
         scoreRight = 0;
-
+        
+        // Réinitialiser la balle au centre
+        ball.x = CENTER_X; 
+        ball.y = CENTER_Y;
+        
         if (audioRefLeft) {
+            // Remettre à 0 pour le redémarrage
+            audioRefLeft.currentTime = 0; 
             audioRefLeft.play().catch(e => console.error("Échec de la lecture audio gauche:", e));
         }
         if (audioRefRight) {
+            // Remettre à 0 pour le redémarrage
+            audioRefRight.currentTime = 0; 
             audioRefRight.play().catch(e => console.error("Échec de la lecture audio droite:", e));
         }
         
@@ -221,6 +229,37 @@
         if (!animationFrameId) {
             draw();
         }
+    }
+    
+    /**
+     * Arrête la boucle d'animation et la lecture audio.
+     */
+    function stopVisualization() {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        if (audioRefLeft) {
+            audioRefLeft.pause();
+        }
+        if (audioRefRight) {
+            audioRefRight.pause();
+        }
+        
+        hasStarted = false;
+        console.log("Jeu terminé : un fichier audio est arrivé à la fin.");
+        // Relancer la boucle de dessin pour afficher l'écran de fin
+        if (!animationFrameId) {
+             draw();
+        }
+    }
+    
+    /**
+     * Gère l'événement 'ended' d'un élément audio.
+     */
+    function handleAudioEnded() {
+        // Arrêter la visualisation dès qu'un côté est terminé
+        stopVisualization();
     }
     
     // --- LOGIQUE VISUELLE ET COLLISION ---
@@ -234,7 +273,8 @@
             const barIndex = Math.floor(ball.y / (barHeightSpace + gap));
             
             if (barIndex >= 0 && barIndex < barCount) {
-                const currentBarLength = dataArrayLeft[barIndex] / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
+                const frequencyValue = hasStarted ? dataArrayLeft[barIndex] : 0; 
+                const currentBarLength = frequencyValue / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
 
                 // Collision en X pour la barre GAUCHE: [0, currentBarLength]
                 if (ball.x - ball.radius <= currentBarLength) {
@@ -251,7 +291,8 @@
             const barIndex = Math.floor(ball.y / (barHeightSpace + gap));
             
             if (barIndex >= 0 && barIndex < barCount) {
-                const currentBarLength = dataArrayRight[barIndex] / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
+                const frequencyValue = hasStarted ? dataArrayRight[barIndex] : 0; 
+                const currentBarLength = frequencyValue / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
                 
                 // Collision en X pour la barre DROITE: [WIDTH - currentBarLength, WIDTH]
                 const barStart = WIDTH - currentBarLength;
@@ -281,34 +322,24 @@
         
         // Si la balle franchit la ligne de but GAUCHE vers la gauche
         if (ball.x - ball.radius < GOAL_LINE_LEFT_X && ball.vx < 0) {
-            // INCLEMENTATION DU SCORE pour le côté DROIT
             scoreRight += 1; 
-            
-            // Repositionner la balle au centre
             ball.x = CENTER_X; 
             ball.y = CENTER_Y;
-            // Inverser la direction pour relancer le jeu
             ball.vx = -ball.vx; 
             console.log("But marqué à GAUCHE ! Score Droit:", scoreRight);
         }
-        // --------------------------------------
         
         // --- LOGIQUE DE LIGNE DE BUT DROITE ---
         const GOAL_LINE_RIGHT_X = WIDTH * GOAL_LINE_RATIO_RIGHT;
         
         // Si la balle franchit la ligne de but DROITE vers la droite
         if (ball.x + ball.radius > GOAL_LINE_RIGHT_X && ball.vx > 0) {
-            // INCLEMENTATION DU SCORE pour le côté GAUCHE
             scoreLeft += 1;
-            
-            // Repositionner la balle au centre
             ball.x = CENTER_X; 
             ball.y = CENTER_Y;
-            // Inverser la direction pour relancer le jeu
             ball.vx = -ball.vx; 
             console.log("But marqué à DROITE ! Score Gauche:", scoreLeft);
         }
-        // --------------------------------------
 
         // 2. Comportement Horizontal (Collision des barres)
         checkBarCollision(WIDTH);
@@ -332,9 +363,9 @@
         const GOAL_LINE_LEFT_X = WIDTH * GOAL_LINE_RATIO_LEFT;
         const GOAL_LINE_RIGHT_X = WIDTH * GOAL_LINE_RATIO_RIGHT;
         
-        ctx.strokeStyle = '#FF5733'; // Couleur orange/rouge
+        ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]); // Ligne pointillée
+        ctx.setLineDash([5, 5]); 
         
         // Ligne GAUCHE
         ctx.beginPath();
@@ -348,7 +379,7 @@
         ctx.lineTo(GOAL_LINE_RIGHT_X, HEIGHT);
         ctx.stroke();
         
-        ctx.setLineDash([]); // Réinitialiser pour ne pas affecter les autres dessins
+        ctx.setLineDash([]); 
         ctx.lineWidth = 1;
     }
 
@@ -362,7 +393,16 @@
              return;
         }
 
-        animationFrameId = requestAnimationFrame(draw);
+        // Continuer à dessiner si le jeu a démarré OU si nous venons d'arrêter (pour afficher l'écran de fin)
+        if (hasStarted || (currentAudioSrcLeft && currentAudioSrcRight && !animationFrameId)) {
+            animationFrameId = requestAnimationFrame(draw);
+        } else if (!hasStarted && animationFrameId) {
+             // Si hasStarted est faux, et animationFrameId est encore actif, nous sommes en train d'afficher l'écran de fin.
+        } else if (!currentAudioSrcLeft || !currentAudioSrcRight) {
+             // Ne pas appeler requestAnimationFrame si les fichiers ne sont pas chargés
+             return;
+        }
+
 
         const canvas = canvasRef;
         const ctx = canvas.getContext('2d');
@@ -379,32 +419,36 @@
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
         // --- Mise à jour de la balle ---
-        updateBall(WIDTH, HEIGHT);
+        if (hasStarted) {
+            updateBall(WIDTH, HEIGHT);
+        }
         // ------------------------------
         
         // 2. Fonctions de Dessin des Barres
-        function drawSide(dataArray, direction) {
+        function drawSide(dataArray, direction, isPlaying) {
             let y = 0; 
 
             for(let i = 0; i < barCount; i++) {
                 if (!dataArray) break;
                 
-                const barLength = dataArray[i] / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
-                
-                const r = barLength + (25 * (i/barCount));
-                const g = 50 * (i/barCount);
-                const b = 200 - barLength;
-
-                ctx.fillStyle = `rgb(${r},${g},${b})`;
-                
-                let x;
+                const barValue = isPlaying ? dataArray[i] : 0; 
+                const barLength = barValue / AMPLITUDE_FACTOR * PIXEL_NORMALIZER;
+    
+                let r, g, b, x;
                 
                 if (direction === 1) {
+                    r = barLength + (25 * (i/barCount));
+                    g = 50 * (i/barCount);
+                    b = 200 - barLength;
                     x = 0; // Côté gauche
-                } else { // direction === -1
+                } else { // direction === -1                    
+                    g = barLength + (25 * (i/barCount));
+                    r = 50 * (i/barCount);
+                    b = 200 - barLength;
                     x = WIDTH - barLength; // Côté droit (collé à droite)
                 }
                 
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
                 ctx.fillRect(x, y, barLength, barHeightSpace);
 
                 y += barHeightSpace + gap;
@@ -413,19 +457,25 @@
 
         // 3. Dessin des deux côtés
         if (isInitializedLeft && analyserLeft && dataArrayLeft) {
-            analyserLeft.getByteFrequencyData(dataArrayLeft);
-            drawSide(dataArrayLeft, 1); 
+            if (hasStarted) {
+                analyserLeft.getByteFrequencyData(dataArrayLeft);
+            }
+            drawSide(dataArrayLeft, 1, hasStarted); 
         } else {
             ctx.fillStyle = '#333';
-            ctx.fillText('Charger audio GAUCHE', HALF_WIDTH / 4 - 50, HEIGHT / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Charger audio GAUCHE', HALF_WIDTH / 4, HEIGHT / 2);
         }
 
         if (isInitializedRight && analyserRight && dataArrayRight) {
-            analyserRight.getByteFrequencyData(dataArrayRight);
-            drawSide(dataArrayRight, -1); 
+             if (hasStarted) {
+                analyserRight.getByteFrequencyData(dataArrayRight);
+            }
+            drawSide(dataArrayRight, -1, hasStarted); 
         } else {
             ctx.fillStyle = '#333';
-            ctx.fillText('Charger audio DROIT', WIDTH - HALF_WIDTH / 4 - 50, HEIGHT / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Charger audio DROIT', WIDTH - HALF_WIDTH / 4, HEIGHT / 2);
         }
         
         // --- Dessin de la ligne de but ---
@@ -435,6 +485,28 @@
         // --- Dessin de la balle ---
         drawBall(ctx);
         // -------------------------
+        
+        // 🚨 NOUVEL AFFICHAGE DE FIN DE PARTIE 🚨
+        if (!hasStarted && (currentAudioSrcLeft && currentAudioSrcRight)) {
+            
+            // Fond semi-transparent
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+            
+            ctx.textAlign = 'center';
+            
+            // Titre
+            ctx.fillStyle = '#FFFFFF'; // Or
+            ctx.font = 'bold 36px Arial';
+            ctx.fillText('Partie', HALF_WIDTH, HEIGHT / 2);
+
+            // Arrêter l'animation frame ici après l'affichage de l'écran de fin
+             if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+             }
+        }
+        // -----------------------------------------
     }
     
     /**
@@ -462,13 +534,12 @@
     });
 </script>
 
----
 
 <div class="visualizer-container">
     
     <div class="file-inputs">
         <label for="audio-file-input-left" class="file-label">
-            🎧 Audio GAUCHE {currentAudioSrcLeft ? '✅' : ''}
+            Audio Gauche {currentAudioSrcLeft ? '✅' : ''}
         </label>
         <input 
             id="audio-file-input-left"
@@ -479,7 +550,7 @@
         />
 
         <label for="audio-file-input-right" class="file-label">
-            🎶 Audio DROIT {currentAudioSrcRight ? '✅' : ''}
+            Audio Droit {currentAudioSrcRight ? '✅' : ''}
         </label>
         <input 
             id="audio-file-input-right"
@@ -492,7 +563,7 @@
 
     {#if currentAudioSrcLeft && currentAudioSrcRight && !hasStarted}
         <button class="start-button" on:click={startVisualization}>
-            ▶️ Démarrer la Visualisation
+            Commencer
         </button>
     {/if}
 
@@ -500,14 +571,12 @@
         <div class="controls-container">
             <div class="audio-toggle">
                 <label class="switch-label">
-                    <span class="audio-text left-text" class:active={isLeftPlaying}>GAUCHE</span>
                     <input 
                         type="checkbox" 
                         bind:checked={isLeftPlaying}
                         on:change={updateAudioOutput}
                     >
                     <span class="slider round"></span>
-                    <span class="audio-text right-text" class:active={!isLeftPlaying}>DROIT</span>
                 </label>
             </div>
         </div>
@@ -518,9 +587,9 @@
             <audio 
                 src={currentAudioSrcLeft} 
                 bind:this={audioRefLeft} 
-                loop
                 controls={hasStarted}
                 on:play={() => audioCtx?.resume()} 
+                on:ended={handleAudioEnded}
             ></audio>
         {/if}
 
@@ -528,9 +597,9 @@
             <audio 
                 src={currentAudioSrcRight} 
                 bind:this={audioRefRight} 
-                loop
                 controls={hasStarted}
                 on:play={() => audioCtx?.resume()} 
+                on:ended={handleAudioEnded}
             ></audio>
         {/if}
     </div>
@@ -538,10 +607,10 @@
     <canvas 
         bind:this={canvasRef} 
         width="600" 
-        height="200"
+        height="300"
     ></canvas>
     
-    {#if hasStarted}
+    {#if currentAudioSrcLeft && currentAudioSrcRight}
         <div class="score-display">
             <span class="score-values">
                 <span class="score-left">{scoreLeft}</span>
@@ -550,23 +619,10 @@
             </span>
         </div>
     {/if}
-
-    
-    {#if !currentAudioSrcLeft || !currentAudioSrcRight || !hasStarted}
-        <div class="placeholder">
-            {#if !currentAudioSrcLeft || !currentAudioSrcRight}
-                **Charger les deux fichiers audio** ci-dessus pour activer le bouton de démarrage.
-            {:else}
-                **Appuyez sur "Démarrer"** pour commencer le jeu de barres musicales ! (Score initialisé à 0)
-            {/if}
-        </div>
-    {/if}
 </div>
 
 <style>
-    /* ----------------------------------- */
-    /* --- Styles Généraux & Audio --- */
-    /* ----------------------------------- */
+/* ... (Styles CSS) ... */
     .visualizer-container {
         display: flex;
         flex-direction: column;
@@ -675,28 +731,22 @@
         display: flex;
         justify-content: center; /* CENTRAGE HORIZONTAL */
         align-items: center;
-        /* width: 600px; <- Retiré pour que le conteneur s'adapte au contenu */
         max-width: 100%;
-        margin-top: 15px;
         padding: 10px;
-        border: 1px solid #333;
-        border-radius: 5px;
-        background-color: #222;
     }
     
     .score-values {
         font-size: 2.5em;
         font-weight: 900;
         color: white;
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
     }
     
     .score-left {
-        color: #ff5733; 
+        color: #9C0D33; 
     }
     
     .score-right {
-        color: #4CAF50; 
+        color: #0D8F3F; 
     }
 
     .score-separator {
@@ -705,9 +755,6 @@
     }
 
 
-    /* ----------------------------------- */
-    /* --- Styles du Toggle (Switch) --- */
-    /* ----------------------------------- */
     .audio-toggle {
         display: flex;
         align-items: center;
@@ -716,8 +763,8 @@
     .switch-label {
         position: relative;
         display: inline-block;
-        width: 150px; 
-        height: 34px;
+        width: 90px; 
+        height: 40px;
     }
 
     .switch-label input { 
@@ -733,7 +780,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #ccc;
+        background-color: #9C0D33;
         transition: .4s;
         border-radius: 34px;
         display: flex;
@@ -744,8 +791,8 @@
     .slider:before {
         position: absolute;
         content: "";
-        height: 26px;
-        width: 26px;
+        height: 32px;
+        width: 32px;
         left: 4px;
         bottom: 4px;
         background-color: white;
@@ -754,11 +801,11 @@
     }
 
     input:checked + .slider {
-        background-color: #2196F3;
+        background-color: #0D8F3F;
     }
 
     input:checked + .slider:before {
-        transform: translateX(116px); 
+        transform: translateX(50px); 
     }
 
     .audio-text {
