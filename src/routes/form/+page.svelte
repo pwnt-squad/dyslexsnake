@@ -1,27 +1,27 @@
 <script>
 	import { goto } from '$app/navigation';
 	import Snake from '$lib/Snake.svelte';
-	let nom = '';
+	let nom = $state('');
 	let prenom = $state('');
 
 	// Messages
-	let erreur = '';      // pour le formulaire
-	let diceError = '';   // pour le mini-jeu de date / dé
+	let erreur = $state('');      // pour le formulaire
+	let diceError = $state('');   // pour le mini-jeu de date / dé
 
 	// Téléphone roulette séquentielle
-	let digits = Array(10).fill(null);
+	let digits = $state(Array(10).fill(null));
 	digits[0] = 0;
-	let currentDigit = 0;
-	let currentIndex = 1;
-	let intervalIdPhone = null;
+	let currentDigit = $state(0);
+	let currentIndex = $state(1);
+	let intervalIdPhone = $state(null);
 
 	// Date via mini-jeu de dés
-	let dateField = '  /  /    ';
-	let diceValue = null; // chiffre final du dé
-	let diceStep = 0; // position dans la date (0-7)
-	let diceRolling = false;
-	let diceFace = 0; // chiffre affiché sur le cube pendant animation
-	let diceAnim = false;
+	let dateField = $state('  /  /    ');
+	let diceValue = $state(null); // chiffre final du dé
+	let diceStep = $state(0); // position dans la date (0-7)
+	let diceRolling = $state(false);
+	let diceFace = $state(0); // chiffre affiché sur le cube pendant animation
+	let diceAnim = $state(false);
 
 	// --- Téléphone ---
 	function resetPhone() {
