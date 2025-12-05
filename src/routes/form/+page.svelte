@@ -208,6 +208,9 @@
 	}
 
 	h2 { text-align:center; margin-bottom:1.5rem; color:#00ff00; }
+	label,button {
+      color:white;
+	}
 
 	label { display:block; margin-top:1rem; margin-bottom:0.5rem; }
 	input { width:100%; padding:0.5rem; font-size:0.9rem; border:2px solid #00ff00; border-radius:5px; background:#000; color:#fff;}

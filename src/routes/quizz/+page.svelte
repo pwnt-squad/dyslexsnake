@@ -536,11 +536,14 @@
     return msgs;
   }
 
+
 </script>
 
+<div class="quizzcontainer">
 {#if step < questions.length}
   <div class="question">
     <h2>{questions[step].text}</h2>
+		<br>
     {#each questions[step].answers as a}
       {#if questions[step].multiple}
         <label>
@@ -566,11 +569,15 @@
       {/if}
     {/each}
   </div>
-  <div>
-    <button on:click={() => step++}>Next question</button>
-  </div>
-  <div>
-    <button on:click={() => step--}>Previous question</button>
+	<br>
+  <div style="display: flex; justify-content: space-around">
+		{#if step%2 == 0}
+			<button on:click={() => {if (step == 0) {step = 12;} else {step--}}} class="start-btn">Question Précédente</button>
+			<button on:click={() => step++} class="start-btn">Question Suivante</button>
+		{:else}
+			<button on:click={() => step++} class="start-btn">Question Suivante</button>
+			<button on:click={() => {if (step == 0) {step = 12;} else {step--}}} class="start-btn">Question Précédente</button>
+		{/if}
   </div>
 {:else}
   <h2>Résultats</h2>
@@ -585,10 +592,15 @@
     </div>
   {/each}
 {/if}
+</div>
 
 <style>
   button { display: block; margin: 5px 0; padding: 8px 12px; }
   .distro { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
   label { display: block; margin: 5px 0; }
+
+  .quizzcontainer {
+		margin: 4em;
+  }
 </style>
 

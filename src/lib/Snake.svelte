@@ -297,7 +297,7 @@
 				break;
 			}
 			case 'ArrowRight': {
-				if (current_direction !== Direction.Up) {
+				if (current_direction !== Direction.Left) {
 					current_direction = Direction.Right;
 				}
 				break;
