@@ -602,8 +602,9 @@
         margin: 0;
         padding: 0;
     }
-    
+
     .visualizer-page-wrapper {
+				font-family: SansSerif, sans-serif;
         display: flex;
         justify-content: center;
         align-items: center;
