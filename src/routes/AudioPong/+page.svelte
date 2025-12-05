@@ -507,7 +507,7 @@
         
         <div class="file-inputs">
             <label for="audio-file-input-left" class="file-label">
-                {fileNameLeft} {currentAudioSrcLeft ? '✅' : ''}
+                {fileNameLeft}
             </label>
             <input 
                 id="audio-file-input-left"
@@ -518,7 +518,7 @@
             />
 
             <label for="audio-file-input-right" class="file-label">
-                {fileNameRight} {currentAudioSrcRight ? '✅' : ''}
+                {fileNameRight}
             </label>
             <input 
                 id="audio-file-input-right"
