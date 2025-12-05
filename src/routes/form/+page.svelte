@@ -98,13 +98,13 @@
 		const regexNomPrenom = /^[^0-9]+$/;
 
 		if (!nom || !prenom || digits.includes(null) || dateField.includes(' ')) {
-			erreur = 'Veuillez remplir correctement tous les champs.';
+			erreur = 'Merci de correctement remplir tous les champs.';
 			resetForm();
 			return;
 		}
 
 		if (!regexNomPrenom.test(nom) || !regexNomPrenom.test(prenom)) {
-			erreur = 'Veuillez remplir correctement tous les champs.';
+			erreur = 'Merci de correctement remplir tous les champs.';
 			resetForm();
 			return;
 		}
@@ -113,7 +113,7 @@
 		const dateTest = new Date(aaaa, mm - 1, jj);
 		const today = new Date();
 		if (isNaN(dateTest.getTime()) || dateTest > today) {
-			erreur = 'Veuillez remplir correctement tous les champs.';
+			erreur = 'Merci de correctement remplir tous les champs.';
 			resetForm();
 			return;
 		}
@@ -121,7 +121,7 @@
 		const numeroValide = digits.join('');
 		const regexTel = /^(0[1-7])[0-9]{8}$/;
 		if (!regexTel.test(numeroValide)) {
-			erreur = 'Veuillez remplir correctement tous les champs.';
+			erreur = 'Merci de correctement remplir tous les champs.';
 			resetForm();
 			return;
 		}
@@ -131,6 +131,26 @@
 </script>
 
 <style>
+	html, body {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.wrapper {
+		width: 100%;
+		height: 100vh;
+		overflow-x: scroll;
+		overflow-y: hidden;
+		scroll-behavior: smooth;
+		position: relative;
+	}
+
+	/* Masquer scrollbar */
+	.wrapper::-webkit-scrollbar { display: none; }
+	.wrapper { -ms-overflow-style: none; scrollbar-width: none; }
+
 	form {
 		max-width: 650px;
 		margin: 2rem auto;
@@ -140,6 +160,7 @@
 		font-family: 'Press Start 2P', cursive;
 		border: 2px solid #00ff00;
 		border-radius: 10px;
+		position: relative;
 	}
 
 	h2 { text-align:center; margin-bottom:1.5rem; color:#00ff00; }
@@ -191,53 +212,75 @@
 	.face4 { transform: rotateY(-90deg) translateZ(40px); }
 	.face5 { transform: rotateX(90deg) translateZ(40px); }
 	.face6 { transform: rotateX(-90deg) translateZ(40px); }
+
+	/* Div hors écran */
+	.hidden-div {
+		position: absolute;
+		top: 2rem;           /* même niveau que le formulaire */
+		left: calc(100% + 50px); /* complètement hors écran */
+		width: 250px;
+		height: 250px;
+		background: #222;
+		border: 2px solid #00ff00;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: #00ff00;
+		font-family: 'Press Start 2P', cursive;
+	}
 </style>
 
-<form on:submit|preventDefault={handleSubmit}>
-	<h2>Formulaire</h2>
+<div class="wrapper">
+	<form on:submit|preventDefault={handleSubmit}>
+		<h2>Formulaire</h2>
 
-	<label>Nom</label>
-	<input type="text" bind:value={nom} />
+		<label>Nom</label>
+		<input type="text" bind:value={nom} />
 
-	<label>Prénom</label>
-	<input type="text" bind:value={prenom} />
+		<label>Prénom</label>
+		<input type="text" bind:value={prenom} />
 
-	<label>Date de naissance (jj/mm/aaaa)</label>
-	<input class="date-field" type="text" bind:value={dateField} readonly />
+		<label>Date de naissance (jj/mm/aaaa)</label>
+		<input class="date-field" type="text" bind:value={dateField} readonly />
 
-	<div class="dice-container">
-		<div class="dice-box">
-			<div class="dice-cube" style="transform: rotateX({diceAnim ? Math.random()*720 : 0}deg) rotateY({diceAnim ? Math.random()*720 : 0}deg);">
-				<div class="face face1">{diceFace}</div>
-				<div class="face face2">{(diceFace+1)%10}</div>
-				<div class="face face3">{(diceFace+2)%10}</div>
-				<div class="face face4">{(diceFace+3)%10}</div>
-				<div class="face face5">{(diceFace+4)%10}</div>
-				<div class="face face6">{(diceFace+5)%10}</div>
+		<div class="dice-container">
+			<div class="dice-box">
+				<div class="dice-cube" style="transform: rotateX({diceAnim ? Math.random()*720 : 0}deg) rotateY({diceAnim ? Math.random()*720 : 0}deg);">
+					<div class="face face1">{diceFace}</div>
+					<div class="face face2">{(diceFace+1)%10}</div>
+					<div class="face face3">{(diceFace+2)%10}</div>
+					<div class="face face4">{(diceFace+3)%10}</div>
+					<div class="face face5">{(diceFace+4)%10}</div>
+					<div class="face face6">{(diceFace+5)%10}</div>
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<div class="dice-buttons">
-		<button type="button" on:click={rollDice3D} disabled={diceStep >= 8}>Lancer Dé</button>
-		<button type="button" on:click={validateDice} disabled={diceValue === null}>Valider</button>
-		<button type="button" on:click={relaunchDice} disabled={diceStep >= 8}>Relancer Dé</button>
-	</div>
+		<div class="dice-buttons">
+			<button type="button" on:click={rollDice3D} disabled={diceStep >= 8}>Lancer Dé</button>
+			<button type="button" on:click={validateDice} disabled={diceValue === null}>Valider</button>
+			<button type="button" on:click={relaunchDice} disabled={diceStep >= 8}>Relancer Dé</button>
+		</div>
 
-	<label>Téléphone</label>
-	<div class="wheel-container">
-		{#each digits as digit, i}
-			<div class="digit">{digit !== null ? digit : (i === currentIndex ? currentDigit : '-')}</div>
-		{/each}
-	</div>
-	<div class="wheel-buttons">
-		<button type="button" on:click={startPhone} disabled={currentIndex>=digits.length}>Start</button>
-		<button type="button" on:click={stopPhone} disabled={currentIndex>digits.length}>Stop</button>
-		<button type="button" on:click={resetForm}>Reset</button>
-	</div>
+		<label>Téléphone</label>
+		<div class="wheel-container">
+			{#each digits as digit, i}
+				<div class="digit">{digit !== null ? digit : (i === currentIndex ? currentDigit : '-')}</div>
+			{/each}
+		</div>
+		<div class="wheel-buttons">
+			<button type="button" on:click={startPhone} disabled={currentIndex>=digits.length}>Start</button>
+			<button type="button" on:click={stopPhone} disabled={currentIndex>digits.length}>Stop</button>
+			<button type="button" on:click={resetForm}>Reset</button>
+		</div>
 
-	<button type="submit">Envoyer</button>
+		<button type="submit">Envoyer</button>
 
-	{#if erreur}<div class="erreur">{erreur}</div>{/if}
-</form>
+		{#if erreur}<div class="erreur">{erreur}</div>{/if}
+	</form>
+
+	<div class="hidden-div">
+		Div hors écran
+	</div>
+</div>
 
